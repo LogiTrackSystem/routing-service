@@ -11,6 +11,7 @@ class Ruta(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     envio_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     vehiculo_id = Column(UUID(as_uuid=True), nullable=True)
+    kilometraje_inicio_ruta = Column(Numeric(10, 2), nullable=True)
     paradas = Column(JSONB, nullable=True)
     distancia_km = Column(Numeric(10, 2), nullable=True)
     hora_estimada_llegada = Column(DateTime(timezone=True), nullable=True)
