@@ -1,6 +1,7 @@
 import uuid
-from sqlalchemy import Boolean, Column, Integer, Numeric, DateTime, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Column, Integer, Numeric, DateTime, ForeignKey, String, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
 
@@ -59,3 +60,34 @@ class Ubicacion(Base):
             partes.append(self.departamento)
         partes.append(self.pais)
         return ", ".join(partes)
+
+
+
+
+class RutaMaestra(Base):
+    __tablename__ = "rutas_maestras"
+    __table_args__ = (UniqueConstraint("origen_id", "destino_id", name="uq_rutas_maestras_par"),)
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    codigo_ruta = Column(
+        String(12),
+        server_default=text("'RUT-' || lpad(nextval('seq_codigo_ruta')::text, 8, '0')"),
+        unique=True,
+        nullable=False,
+    )
+    origen_id = Column(UUID(as_uuid=True), ForeignKey("ubicaciones.id"), nullable=False)
+    destino_id = Column(UUID(as_uuid=True), ForeignKey("ubicaciones.id"), nullable=False)
+    distancia_km = Column(Numeric(10, 2), nullable=False)
+    duracion_horas = Column(Numeric(8, 2), nullable=False)
+    geometria = Column(Text, nullable=False)
+    paradas = Column(JSONB, nullable=True)
+    fuente = Column(String(10), nullable=False, server_default="osrm")
+    calculada_en = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    actualizado_en = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    origen = relationship("Ubicacion", foreign_keys=[origen_id], lazy="joined")
+    destino = relationship("Ubicacion", foreign_keys=[destino_id], lazy="joined")
+
+    @property
+    def estimada(self) -> bool:
+        return self.fuente == "estimada"

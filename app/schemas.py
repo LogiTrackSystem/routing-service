@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
@@ -86,4 +86,36 @@ class UbicacionLeer(BaseModel):
     tipo: str
     activo: bool
     etiqueta: str
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ---------- Rutas maestras ----------
+
+class RutaMaestraCalcular(BaseModel):
+    origen_id: Optional[UUID] = None
+    origen_codigo: Optional[str] = None
+    destino_id: Optional[UUID] = None
+    destino_codigo: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _origen_y_destino(self):
+        if (self.origen_id is None) == (self.origen_codigo is None):
+            raise ValueError("Indique el origen con origen_id o con origen_codigo (solo uno)")
+        if (self.destino_id is None) == (self.destino_codigo is None):
+            raise ValueError("Indique el destino con destino_id o con destino_codigo (solo uno)")
+        return self
+
+
+class RutaMaestraLeer(BaseModel):
+    id: UUID
+    codigo_ruta: str
+    origen: UbicacionLeer
+    destino: UbicacionLeer
+    distancia_km: float
+    duracion_horas: float
+    fuente: str
+    estimada: bool
+    paradas: Optional[list[dict]] = None
+    calculada_en: datetime
+    actualizado_en: datetime
     model_config = ConfigDict(from_attributes=True)

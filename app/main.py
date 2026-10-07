@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from .database import SessionLocal
-from .routers import rutas, ubicaciones
+from .routers import rutas, rutas_maestras, ubicaciones
 from .events import iniciar_consumidor
 from .seed_ubicaciones import sembrar_ubicaciones
 
@@ -31,6 +31,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Routing Service", lifespan=lifespan)
 app.include_router(rutas.router)
 app.include_router(ubicaciones.router)
+app.include_router(rutas_maestras.router)
 
 
 @app.get("/health")
