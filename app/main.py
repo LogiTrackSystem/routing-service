@@ -1,12 +1,28 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
-from .routers import rutas
+from .database import SessionLocal
+from .routers import rutas, ubicaciones
 from .events import iniciar_consumidor
+from .seed_ubicaciones import sembrar_ubicaciones
+
+
+def _sembrar_catalogo():
+    db = SessionLocal()
+    try:
+        nuevas = sembrar_ubicaciones(db)
+        if nuevas:
+            print(f"[routing] catalogo de ubicaciones: {nuevas} sembradas")
+    except Exception as exc:
+        db.rollback()
+        print(f"[routing] no se pudo sembrar el catalogo de ubicaciones: {exc}")
+    finally:
+        db.close()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    _sembrar_catalogo()
     connection = await iniciar_consumidor()
     yield
     await connection.close()
@@ -14,6 +30,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Routing Service", lifespan=lifespan)
 app.include_router(rutas.router)
+app.include_router(ubicaciones.router)
 
 
 @app.get("/health")

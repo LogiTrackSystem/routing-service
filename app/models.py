@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, Integer, Numeric, DateTime, ForeignKey, Text
+from sqlalchemy import Boolean, Column, Integer, Numeric, DateTime, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 from .database import Base
@@ -30,3 +30,32 @@ class HistorialRuta(Base):
     hora_estimada_llegada_anterior = Column(DateTime(timezone=True), nullable=True)
     motivo_recalculo = Column(Text, nullable=True)
     recalculado_en = Column(DateTime(timezone=True), server_default=func.now())
+
+
+
+class Ubicacion(Base):
+    __tablename__ = "ubicaciones"
+    __table_args__ = (
+        UniqueConstraint("codigo_pais", "nombre_normalizado", "departamento", name="uq_ubicaciones_pais_nombre_depto"),
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    codigo = Column(String(12), unique=True, nullable=False)
+    nombre = Column(String(100), nullable=False)
+    nombre_normalizado = Column(String(100), nullable=False, index=True)
+    departamento = Column(String(100), nullable=False)
+    pais = Column(String(60), nullable=False)
+    codigo_pais = Column(String(2), nullable=False, index=True)
+    latitud = Column(Numeric(9, 6), nullable=False)
+    longitud = Column(Numeric(9, 6), nullable=False)
+    tipo = Column(String(20), nullable=False, server_default="ciudad")
+    activo = Column(Boolean, nullable=False, server_default="true")
+    creado_en = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    @property
+    def etiqueta(self) -> str:
+        partes = [self.nombre]
+        if self.departamento and self.departamento.lower() != self.nombre.lower():
+            partes.append(self.departamento)
+        partes.append(self.pais)
+        return ", ".join(partes)
