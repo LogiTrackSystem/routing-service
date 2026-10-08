@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Boolean, Column, Integer, Numeric, DateTime, ForeignKey, String, Text, UniqueConstraint, text
+from sqlalchemy import Boolean, Column, Index, Integer, Numeric, DateTime, ForeignKey, String, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -8,7 +8,11 @@ from .database import Base
 
 class Ruta(Base):
     __tablename__ = "rutas"
-
+    __table_args__ = (
+        Index("uq_rutas_envio_vigente", "envio_id", unique=True,
+              postgresql_where=text("estado NOT IN ('historica', 'manual')")),
+    )
+    
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     envio_id = Column(UUID(as_uuid=True), nullable=False, index=True)
     vehiculo_id = Column(UUID(as_uuid=True), nullable=True)
@@ -19,6 +23,23 @@ class Ruta(Base):
     veces_recalculada = Column(Integer, nullable=False, default=0)
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
     actualizado_en = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    estado = Column(String(20), nullable=False, server_default="manual", index=True)
+    conductor_id = Column(UUID(as_uuid=True), nullable=True)
+    reserva_id = Column(UUID(as_uuid=True), nullable=True)
+    ruta_maestra_id = Column(UUID(as_uuid=True), ForeignKey("rutas_maestras.id"), nullable=True)
+    requisitos = Column(JSONB, nullable=True)
+    detalle_asignacion = Column(JSONB, nullable=True)
+    distancia_planificada_km = Column(Numeric(10, 2), nullable=True)
+    intentos = Column(Integer, nullable=False, server_default="0")
+    proximo_reintento_en = Column(DateTime(timezone=True), nullable=True)
+    ultimo_error = Column(Text, nullable=True)
+    evento_pendiente = Column(String(30), nullable=True)
+
+    ruta_maestra = relationship("RutaMaestra")
+
+    @property
+    def codigo_ruta(self):
+        return self.ruta_maestra.codigo_ruta if self.ruta_maestra else None
 
 
 class HistorialRuta(Base):

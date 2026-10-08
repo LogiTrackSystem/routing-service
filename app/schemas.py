@@ -23,11 +23,20 @@ class RutaRecalcular(BaseModel):
 class RutaLeer(BaseModel):
     id: UUID
     envio_id: UUID
+    estado: str
     vehiculo_id: Optional[UUID] = None
+    conductor_id: Optional[UUID] = None
+    detalle_asignacion: Optional[Any] = None
+    ruta_maestra_id: Optional[UUID] = None
+    codigo_ruta: Optional[str] = None
     paradas: Optional[Any] = None
     distancia_km: Optional[Decimal] = None
+    distancia_planificada_km: Optional[Decimal] = None
     hora_estimada_llegada: Optional[datetime] = None
     veces_recalculada: int
+    intentos: int
+    ultimo_error: Optional[str] = None
+    proximo_reintento_en: Optional[datetime] = None
     creado_en: datetime
     actualizado_en: datetime
     model_config = ConfigDict(from_attributes=True)

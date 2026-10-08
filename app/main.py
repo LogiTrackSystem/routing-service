@@ -1,8 +1,10 @@
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
+from .asignacion import bucle_reintentos
 from .database import SessionLocal
-from .routers import rutas, rutas_maestras, ubicaciones
+from .routers import asignaciones, rutas, rutas_maestras, ubicaciones
 from .events import iniciar_consumidor
 from .seed_ubicaciones import sembrar_ubicaciones
 
@@ -24,7 +26,9 @@ def _sembrar_catalogo():
 async def lifespan(app: FastAPI):
     _sembrar_catalogo()
     connection = await iniciar_consumidor()
+    tarea_reintentos = asyncio.create_task(bucle_reintentos())
     yield
+    tarea_reintentos.cancel()
     await connection.close()
 
 
@@ -32,6 +36,7 @@ app = FastAPI(title="Routing Service", lifespan=lifespan)
 app.include_router(rutas.router)
 app.include_router(ubicaciones.router)
 app.include_router(rutas_maestras.router)
+app.include_router(asignaciones.router)
 
 
 @app.get("/health")
