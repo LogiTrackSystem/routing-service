@@ -249,7 +249,12 @@ async def procesar_envio_cerrado(payload: dict) -> None:
     envio_id = uuid.UUID(payload["envio_id"])
     db = SessionLocal()
     try:
-        ruta = _ruta_vigente(db, envio_id)
+        ruta = (
+            db.query(Ruta)
+            .filter(Ruta.envio_id == envio_id, Ruta.estado.not_in(ESTADOS_FUERA_DE_SAGA))
+            .with_for_update(of=Ruta)
+            .first()
+        )
         if ruta is None:
             return
         if ruta.estado == "sin_asignacion":
