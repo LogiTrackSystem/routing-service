@@ -72,6 +72,7 @@ _HANDLERS = {
     "shipment.created": procesar_shipment_created,
     "shipment.delivered": _procesar_shipment_cerrado,
     "shipment.returned": _procesar_shipment_cerrado,
+    "shipment.cancelled": _procesar_shipment_cerrado,  # cancelado antes de salir: se libera o se abandona la solicitud
     "telemetry.raw": _procesar_telemetry_raw,
 }
 
@@ -94,7 +95,7 @@ async def iniciar_consumidor():
         EXCHANGE_NAME, aio_pika.ExchangeType.TOPIC, durable=True
     )
     queue = await channel.declare_queue("routing_service.eventos", durable=True)
-    for clave in ("shipment.created", "shipment.delivered", "shipment.returned", "telemetry.raw"):
+    for clave in ("shipment.created", "shipment.delivered", "shipment.returned", "shipment.cancelled", "telemetry.raw"):
         await queue.bind(exchange, routing_key=clave)
     await queue.consume(_on_message)
     return connection
