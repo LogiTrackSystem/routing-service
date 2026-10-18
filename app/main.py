@@ -1,6 +1,7 @@
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from .interno import proteger_servicio
 
 from .asignacion import bucle_reintentos
 from .database import SessionLocal
@@ -34,6 +35,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Routing Service", lifespan=lifespan)
 app.include_router(rutas.router)
+proteger_servicio(app)
 app.include_router(ubicaciones.router)
 app.include_router(rutas_maestras.router)
 app.include_router(asignaciones.router)

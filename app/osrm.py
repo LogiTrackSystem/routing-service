@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 OSRM_URL = os.getenv("OSRM_URL", "https://router.project-osrm.org").rstrip("/")
-INTENTOS = 3
-TIMEOUT_S = 25.0
+INTENTOS = int(os.getenv("OSRM_INTENTOS", "3"))
+TIMEOUT_S = float(os.getenv("OSRM_TIMEOUT_S", "25"))
 CABECERAS = {"User-Agent": "LogiTrack-Routing/1.0 (proyecto academico)"}
 
 

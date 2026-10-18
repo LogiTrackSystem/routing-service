@@ -2,6 +2,7 @@ import asyncio
 import os
 
 import httpx
+from .interno import cabeceras_internas
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -25,7 +26,7 @@ async def _post(ruta: str, cuerpo: dict) -> httpx.Response:
     ultimo_error = "sin intentos"
     for intento in range(1, INTENTOS + 1):
         try:
-            async with httpx.AsyncClient(timeout=TIMEOUT_S) as client:
+            async with httpx.AsyncClient(timeout=TIMEOUT_S, headers=cabeceras_internas()) as client:
                 resp = await client.post(f"{FLEET_SERVICE_URL}{ruta}", json=cuerpo)
         except httpx.HTTPError as exc:
             ultimo_error = f"{type(exc).__name__}: {exc}"
