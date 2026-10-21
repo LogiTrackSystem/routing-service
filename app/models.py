@@ -10,7 +10,9 @@ class Ruta(Base):
     __tablename__ = "rutas"
     __table_args__ = (
         Index("uq_rutas_envio_vigente", "envio_id", unique=True,
-              postgresql_where=text("estado NOT IN ('historica', 'manual')")),
+              postgresql_where=text("estado NOT IN ('historica', 'manual')"),
+              sqlite_where=text("estado NOT IN ('historica', 'manual')")),
+        Index("ix_rutas_vehiculo_estado", "vehiculo_id", "estado"),
     )
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -34,8 +36,22 @@ class Ruta(Base):
     proximo_reintento_en = Column(DateTime(timezone=True), nullable=True)
     ultimo_error = Column(Text, nullable=True)
     evento_pendiente = Column(String(30), nullable=True)
+    # Carga compartida: "exclusiva" = el vehículo sale solo para este envío; "compartida" = se sube a la ruta de otro
+    modo = Column(String(12), nullable=False, server_default="exclusiva")
+    ruta_anfitriona_id = Column(UUID(as_uuid=True), ForeignKey("rutas.id"), nullable=True, index=True)
+    km_recogida = Column(Numeric(10, 2), nullable=True)   # km (sobre la ruta del anfitrión) donde sube la carga
+    km_entrega = Column(Numeric(10, 2), nullable=True)    # km donde se baja
+    # Tramo en vacío desde donde estaba el vehículo hasta el origen del envío (no se factura: no entra en distancia_km)
+    reposicion = Column(JSONB, nullable=True)
 
     ruta_maestra = relationship("RutaMaestra")
+
+    @property
+    def reposicion_resumen(self):
+        """El tramo en vacío sin la geometría (que es pesada y solo la usa Tracking)."""
+        if not self.reposicion:
+            return None
+        return {k: v for k, v in self.reposicion.items() if k != "geometria"}
 
     @property
     def codigo_ruta(self):

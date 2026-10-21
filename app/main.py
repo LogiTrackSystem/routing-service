@@ -5,7 +5,7 @@ from .interno import proteger_servicio
 
 from .asignacion import bucle_reintentos
 from .database import SessionLocal
-from .routers import asignaciones, rutas, rutas_maestras, ubicaciones
+from .routers import asignaciones, rutas, rutas_maestras, trayecto, ubicaciones
 from .events import iniciar_consumidor
 from .seed_ubicaciones import sembrar_ubicaciones
 
@@ -39,6 +39,7 @@ proteger_servicio(app)
 app.include_router(ubicaciones.router)
 app.include_router(rutas_maestras.router)
 app.include_router(asignaciones.router)
+app.include_router(trayecto.router)
 
 
 @app.get("/health")

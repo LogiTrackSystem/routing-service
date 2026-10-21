@@ -37,9 +37,14 @@ class RutaLeer(BaseModel):
     intentos: int
     ultimo_error: Optional[str] = None
     proximo_reintento_en: Optional[datetime] = None
+    modo: str = "exclusiva"
+    ruta_anfitriona_id: Optional[UUID] = None
+    km_recogida: Optional[Decimal] = None
+    km_entrega: Optional[Decimal] = None
+    reposicion: Optional[Any] = Field(None, validation_alias="reposicion_resumen")
     creado_en: datetime
     actualizado_en: datetime
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class HistorialRutaLeer(BaseModel):

@@ -20,13 +20,15 @@ class OsrmNoDisponible(Exception):
     """No se pudo obtener una respuesta útil de OSRM (red caída, límite de uso, error del servidor)."""
 
 
-def consultar_osrm(lon1, lat1, lon2, lat2) -> dict:
+def consultar_osrm(lon1, lat1, lon2, lat2, intentos=None, timeout=None) -> dict:
+    intentos = INTENTOS if intentos is None else intentos
+    timeout = TIMEOUT_S if timeout is None else timeout
     url = f"{OSRM_URL}/route/v1/driving/{lon1:.6f},{lat1:.6f};{lon2:.6f},{lat2:.6f}"
     parametros = {"overview": "simplified", "geometries": "polyline", "steps": "false"}
     ultimo_error = "sin intentos"
-    for intento in range(1, INTENTOS + 1):
+    for intento in range(1, intentos + 1):
         try:
-            resp = httpx.get(url, params=parametros, headers=CABECERAS, timeout=TIMEOUT_S)
+            resp = httpx.get(url, params=parametros, headers=CABECERAS, timeout=timeout)
             datos = resp.json()
         except (httpx.HTTPError, ValueError) as exc:
             ultimo_error = f"{type(exc).__name__}: {exc}"
@@ -42,6 +44,6 @@ def consultar_osrm(lon1, lat1, lon2, lat2) -> dict:
             if codigo in ("NoRoute", "NoSegment"):
                 raise SinCarretera(datos.get("message") or codigo)
             ultimo_error = f"OSRM respondió HTTP {resp.status_code} ({codigo})"
-        if intento < INTENTOS:
+        if intento < intentos:
             time.sleep(intento)  # espera 1 s y luego 2 s antes de reintentar
     raise OsrmNoDisponible(ultimo_error)
