@@ -16,6 +16,10 @@ WORKDIR /app
 COPY --from=builder /install /usr/local
 COPY . .
 
+# Versión de la imagen (la fija el pipeline con el SHA del commit); /health la devuelve.
+ARG APP_VERSION=dev
+ENV APP_VERSION=${APP_VERSION}
+
 EXPOSE 8003
 
 CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8003}"]

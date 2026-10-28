@@ -1,3 +1,4 @@
+import os
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -44,4 +45,4 @@ app.include_router(trayecto.router)
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "routing-service"}
+    return {"status": "ok", "service": "routing-service", "version": os.getenv("APP_VERSION", "dev")}

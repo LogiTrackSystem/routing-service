@@ -65,7 +65,7 @@ def test_la_hora_de_llegada_de_la_carga_compartida_es_antes_que_la_del_anfitrion
 
 def test_no_se_comparte_si_no_cabe_el_peso_y_sale_otro_vehiculo(db, fleet, osrm, eventos):
     u, larga, t1, t2, _ = corredor(db)
-    h = host(db, fleet, larga, capacidad=1000, peso=900)
+    host(db, fleet, larga, capacidad=1000, peso=900)
     libre = fleet.agregar("LIBRE", 8.75, -75.88)
     inv = solicitar(db, t1, 200)
     assert inv.modo == "exclusiva" and str(inv.vehiculo_id) == libre and inv.ruta_anfitriona_id is None
@@ -151,7 +151,7 @@ def test_el_apagado_de_la_carga_compartida_se_respeta(db, fleet, osrm, eventos, 
     monkeypatch.setenv("CARGA_COMPARTIDA_ACTIVA", "false")
     u, larga, t1, t2, _ = corredor(db)
     host(db, fleet, larga)
-    libre = fleet.agregar("LIBRE", 8.75, -75.88)
+    fleet.agregar("LIBRE", 8.75, -75.88)
     assert solicitar(db, t1, 100).modo == "exclusiva"
 
 

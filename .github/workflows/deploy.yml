@@ -1,0 +1,49 @@
+# Despliegue de routing-service. Solo ocurre al fusionar un PR en main Y con las pruebas en verde.
+# También permite ROLLBACK manual a una imagen anterior ya probada.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "ROLLBACK: SHA completo del commit (imagen ya publicada) que se quiere volver a desplegar"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# Un solo despliegue a la vez por servicio; uno en curso nunca se cancela a la mitad.
+concurrency:
+  group: deploy-routing
+  cancel-in-progress: false
+
+jobs:
+  test:
+    if: ${{ github.event_name == 'push' }}
+    uses: LogiTrackSystem/pipelines/.github/workflows/ci.yml@v1
+    with:
+      service-name: routing
+
+  release:
+    needs: test
+    if: ${{ github.event_name == 'push' }}
+    uses: LogiTrackSystem/pipelines/.github/workflows/cd.yml@v1
+    with:
+      service-name: routing
+      image-tag: ${{ github.sha }}
+      service-url: ${{ vars.SERVICE_URL }}
+    secrets: inherit
+
+  rollback:
+    # Solo desde main, para que nadie lo lance desde una rama cualquiera.
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    uses: LogiTrackSystem/pipelines/.github/workflows/cd.yml@v1
+    with:
+      service-name: routing
+      image-tag: ${{ inputs.tag }}
+      service-url: ${{ vars.SERVICE_URL }}
+      rollback: true
+    secrets: inherit
