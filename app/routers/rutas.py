@@ -24,14 +24,14 @@ def crear_ruta(payload: RutaCrear, db: Session = Depends(get_db)):
     db.refresh(ruta)
     return ruta
 
-
 @router.get("/", response_model=list[RutaLeer])
-def listar_rutas(envio_id: uuid.UUID | None = None, db: Session = Depends(get_db)):
+def listar_rutas(envio_id: uuid.UUID | None = None, estado: str | None = None, db: Session = Depends(get_db)):
     query = db.query(Ruta)
     if envio_id:
         query = query.filter(Ruta.envio_id == envio_id)
+    if estado:
+        query = query.filter(Ruta.estado == estado.strip().lower())
     return query.order_by(Ruta.creado_en.desc()).all()
-
 
 @router.get("/{ruta_id}", response_model=RutaLeer)
 def obtener_ruta(ruta_id: uuid.UUID, db: Session = Depends(get_db)):

@@ -1,0 +1,20 @@
+# Se ejecuta en cada Pull Request hacia main. NO publica ni despliega nada.
+# El check "ci / validar" debe estar marcado como requerido en la protección de main.
+name: PR
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: LogiTrackSystem/pipelines/.github/workflows/ci.yml@v1
+    with:
+      service-name: routing
