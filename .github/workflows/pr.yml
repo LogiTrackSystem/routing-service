@@ -1,8 +1,11 @@
-# Se ejecuta en cada Pull Request hacia main. NO publica ni despliega nada.
+# Se ejecuta en cada push a una rama que no sea main y en cada Pull Request hacia main. NO publica ni despliega nada.
+# (Los push a main los atiende deploy.yml, que también ejecuta primero las pruebas.)
 # El check "ci / validar" debe estar marcado como requerido en la protección de main.
 name: PR
 
 on:
+  push:
+    branches-ignore: [main]
   pull_request:
     branches: [main]
 
