@@ -45,3 +45,81 @@ Cuando un vehículo termina **sin entregar** (devuelto, cancelado o entrega manu
 **Variables nuevas:** `OSRM_INTENTOS_REPOSICION`, `OSRM_TIMEOUT_REPOSICION_S`, `UMBRAL_MISMO_LUGAR_KM`, `CARGA_COMPARTIDA_ACTIVA`, `PARADA_MAX_DESVIO_KM`, `MARGEN_RECOGIDA_KM`, `TRAMO_MINIMO_COMPARTIDO_KM`, `MAX_ANFITRIONES_EVALUADOS`, `DB_LOCK_TIMEOUT_MS`, `ESPERA_RUTA_OCUPADA_S`, `INTENTOS_RUTA_OCUPADA` (ver `.env.example`). Ningún manejador de eventos espera un candado de fila de forma bloqueante: si la ruta la tiene otra tarea se reintenta con `asyncio.sleep`.
 
 **Migración** `b81f3c0d7a24` (solo agrega columnas con valor por defecto). **Pruebas:** `python -m pytest tests` (SQLite en memoria y un Fleet simulado).
+
+---
+
+<!-- entrega-final -->
+
+## Descripción
+
+Catálogo de ubicaciones, rutas maestras por carretera (OSRM) y asignación de vehículo y conductor mediante una Saga con reintentos y compensación; también la carga compartida.
+
+- **Puerto local:** 8003   ·   **Despliegue activo:** <https://logitrack-routing.onrender.com> (`/health` y `/metrics` públicos)
+- **Imagen Docker:** `<usuario-dockerhub>/logitrack-routing`   ·   **Repositorio de CI/CD:** `LogiTrackSystem/pipelines`
+
+## Variables de entorno
+
+Copia `.env.example` como `.env` y completa los valores. El `.env` **no se sube** al repositorio.
+
+| Variable | Para qué sirve |
+|---|---|
+| `DATABASE_URL` | Conexión a la base PostgreSQL del servicio (`postgresql://usuario:clave@host:5432/<base>`). Es un secreto. |
+| `RABBITMQ_URL` | URL AMQP del bus de eventos RabbitMQ (CloudAMQP en producción). Es un secreto. |
+| `FLEET_SERVICE_URL` | URL base de Fleet Service, sin barra final (en local `http://localhost:<puerto>`). |
+| `SHIPMENT_SERVICE_URL` | URL base de Shipment Service, sin barra final (en local `http://localhost:<puerto>`). |
+| `OSRM_URL` | Servidor OSRM para calcular rutas por carretera (por defecto el público de OSRM). |
+| `INTERNAL_API_KEY` | Clave compartida entre el gateway y los servicios: exige la cabecera `X-Internal-Key` en todas las rutas salvo `/health` y `/metrics`. Vacía = sin restricción (solo local). Es un secreto. |
+| `OSRM_INTENTOS` | Reintentos de consulta a OSRM. |
+| `OSRM_TIMEOUT_S` | Tiempo de espera (s) por intento de OSRM. |
+| `OSRM_INTENTOS_REPOSICION` | Reintentos de OSRM para el tramo en vacío. |
+| `OSRM_TIMEOUT_REPOSICION_S` | Tiempo de espera (s) de OSRM para el tramo en vacío. |
+| `UMBRAL_MISMO_LUGAR_KM` | Por debajo de esta distancia el vehículo "ya está en el origen". |
+| `CARGA_COMPARTIDA_ACTIVA` | `false` apaga la carga compartida. |
+| `PARADA_MAX_DESVIO_KM` | Una parada cuenta como "sobre la ruta" si está a menos de estos km de la carretera. |
+| `MARGEN_RECOGIDA_KM` | Km mínimos antes del punto de recogida para subir carga compartida. |
+| `TRAMO_MINIMO_COMPARTIDO_KM` | Tramo mínimo (km) de la carga compartida. |
+| `DB_LOCK_TIMEOUT_MS` | Espera máxima (ms) por un candado de fila antes de fallar; 0 = sin límite. |
+| `MAX_ANFITRIONES_EVALUADOS` | Máximo de rutas en viaje evaluadas como anfitrionas. |
+| `ESPERA_RUTA_OCUPADA_S` | Espera (s) entre reintentos cuando la ruta está tomada por otra tarea. |
+| `INTENTOS_RUTA_OCUPADA` | Número de esos reintentos. |
+
+## Documentación de la API
+
+- **Local** (sin `INTERNAL_API_KEY`): <http://localhost:8003/docs> (Swagger) y `http://localhost:8003/openapi.json`.
+- **Producción:** el servicio solo atiende peticiones que llegan por el gateway (con `INTERNAL_API_KEY` activa su `/docs` no es público); la documentación de todas las rutas está en <https://logitrack-gateway.onrender.com/docs>.
+
+## Base de datos
+
+- Migraciones con Alembic (`alembic/`): `alembic upgrade head` (el `Dockerfile` ya lo ejecuta al arrancar).
+- `db/esquema.sql`: esquema completo de `routing_db` generado desde las migraciones.
+- Datos de ejemplo: este servicio se alimenta de eventos y llamadas de otros servicios; se generan ejecutando el flujo completo (por ejemplo `_pruebas/casos.py` del proyecto).
+- Respaldo y restauración: ver `db/README.md`.
+
+## Pruebas
+
+Con el entorno virtual activo y `pip install -r requirements-dev.txt`:
+
+```
+pytest tests/unit                    # 2 pruebas unitarias
+pytest tests/integration             # 1 prueba de integración
+pytest --cov=app --cov-report=term   # toda la suite con cobertura
+```
+
+| Prueba | Qué verifica |
+|---|---|
+| Unitaria 1 | `geo.calcular_paradas` |
+| Unitaria 2 | `asignacion.procesar_shipment_created` |
+| Integración | evento `shipment.created` → asignación de vehículo → consulta de la ruta por API |
+
+Archivos: `tests/unit/` y `tests/integration/` (test_calcular_paradas.py, test_envio_creado.py, test_flujo_asignacion.py). Cobertura de `app/` medida: **≈ 67 %**; en cada push y Pull Request GitHub Actions la recalcula y guarda `coverage.xml` como artefacto (`cobertura-routing`).
+
+## Métricas y monitoreo
+
+Expone `GET /metrics` (formato Prometheus: `http_requests_total` y `http_request_duration_*`). Prometheus y el dashboard de Grafana están en el repositorio `logitrack-monitoring`.
+
+## CI/CD
+
+- `.github/workflows/pr.yml`: en cada push (rama distinta de `main`) y en cada Pull Request a `main` ejecuta el CI reutilizable (lint, pruebas con cobertura, `docker build` y prueba de arranque).
+- `.github/workflows/deploy.yml`: al fusionar en `main`, y solo con las pruebas en verde, publica la imagen en Docker Hub y despliega en Render (con verificación de `/health` y rollback manual).
+- Detalle y estrategia de ramas: `CICD.md` en el repositorio `LogiTrackSystem/pipelines`.
+
