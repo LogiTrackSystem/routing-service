@@ -50,6 +50,9 @@ UBICACIONES_SEMILLA = [
     ("CO-MFL", "Miraflores", "Guaviare", "Colombia", "CO", 1.3364, -71.9506, "ciudad"),
     ("CO-PAS", "Puerto Asís", "Putumayo", "Colombia", "CO", 0.5058, -76.4950, "ciudad"),
     ("CO-SVC", "San Vicente del Caguán", "Caquetá", "Colombia", "CO", 2.1128, -74.7667, "ciudad"),
+    # ---------- Vichada (frontera con Venezuela) ----------
+    ("CO-PCR", "Puerto Carreño", "Vichada", "Colombia", "CO", 6.1890, -67.4859, "ciudad"),
+    ("CO-LPR", "La Primavera", "Vichada", "Colombia", "CO", 5.4817, -70.4128, "ciudad"),
     # ---------- Capitales de Sudamérica ----------
     ("BR-BSB", "Brasília", "Distrito Federal", "Brasil", "BR", -15.7939, -47.8828, "capital"),
     ("PE-LIM", "Lima", "Lima", "Perú", "PE", -12.0464, -77.0428, "capital"),
