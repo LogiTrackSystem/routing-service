@@ -15,7 +15,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 CABECERA = "X-Internal-Key"
-RUTAS_ABIERTAS = ("/health",)
+RUTAS_ABIERTAS = ("/health", "/metrics")
 
 
 def clave_interna() -> str:

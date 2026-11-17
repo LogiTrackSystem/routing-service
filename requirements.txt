@@ -7,3 +7,5 @@ psycopg2-binary==2.9.13
 python-dotenv==1.2.3
 aio-pika==10.0.1
 httpx==0.28.1
+prometheus-client==0.26.0
+prometheus-fastapi-instrumentator==8.1.0
