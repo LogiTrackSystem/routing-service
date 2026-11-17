@@ -53,6 +53,7 @@ UBICACIONES_SEMILLA = [
     # ---------- Vichada (frontera con Venezuela) ----------
     ("CO-PCR", "Puerto Carreño", "Vichada", "Colombia", "CO", 6.1890, -67.4859, "ciudad"),
     ("CO-LPR", "La Primavera", "Vichada", "Colombia", "CO", 5.4817, -70.4128, "ciudad"),
+    ("CO-SRV", "Santa Rosalía", "Vichada", "Colombia", "CO", 5.1403, -70.8611, "ciudad"),
     # ---------- Capitales de Sudamérica ----------
     ("BR-BSB", "Brasília", "Distrito Federal", "Brasil", "BR", -15.7939, -47.8828, "capital"),
     ("PE-LIM", "Lima", "Lima", "Perú", "PE", -12.0464, -77.0428, "capital"),
