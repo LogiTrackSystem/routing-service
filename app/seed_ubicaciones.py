@@ -44,6 +44,12 @@ UBICACIONES_SEMILLA = [
     ("CO-CAU", "Caucasia", "Antioquia", "Colombia", "CO", 7.9847, -75.1983, "ciudad"),
     ("CO-LOR", "Lorica", "Córdoba", "Colombia", "CO", 9.2394, -75.8142, "ciudad"),
     ("CO-SON", "San Onofre", "Sucre", "Colombia", "CO", 9.7400, -75.5217, "ciudad"),
+    # ---------- Guaviare y Amazonía (accesibles por carretera) ----------
+    ("CO-ERT", "El Retorno", "Guaviare", "Colombia", "CO", 2.3306, -72.6256, "ciudad"),
+    ("CO-CLM", "Calamar", "Guaviare", "Colombia", "CO", 1.9597, -72.6469, "ciudad"),
+    ("CO-MFL", "Miraflores", "Guaviare", "Colombia", "CO", 1.3364, -71.9506, "ciudad"),
+    ("CO-PAS", "Puerto Asís", "Putumayo", "Colombia", "CO", 0.5058, -76.4950, "ciudad"),
+    ("CO-SVC", "San Vicente del Caguán", "Caquetá", "Colombia", "CO", 2.1128, -74.7667, "ciudad"),
     # ---------- Capitales de Sudamérica ----------
     ("BR-BSB", "Brasília", "Distrito Federal", "Brasil", "BR", -15.7939, -47.8828, "capital"),
     ("PE-LIM", "Lima", "Lima", "Perú", "PE", -12.0464, -77.0428, "capital"),
